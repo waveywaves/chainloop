@@ -182,7 +182,14 @@ func HandleAgentSessionStart(provider trace.Provider, log zerolog.Logger) error 
 	var msg trace.SessionStartMessage
 
 	if provider.SupportsSessionStartInstruction() {
-		msg.Instruction = sessionSpecInstruction(repoRoot, input.SessionID, provider.SupportsPromptReminder(), log)
+		remindsEachTurn := provider.SupportsPromptReminder()
+		deduplicator, ok := provider.(interface{ DeduplicatesSessionStartInstruction() bool })
+		if ok && deduplicator.DeduplicatesSessionStartInstruction() {
+			// Pi persists its own per-session marker. Give it the full instruction
+			// after reload/resume and let that marker decide whether delivery is new.
+			remindsEachTurn = false
+		}
+		msg.Instruction = sessionSpecInstruction(repoRoot, input.SessionID, remindsEachTurn, log)
 	}
 
 	if provider.SupportsSessionStartBanner() {

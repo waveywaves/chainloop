@@ -87,7 +87,7 @@ func TestCopySessionDataFailureRemovesStaleCopy(t *testing.T) {
 }
 
 func TestCopySessionDataInvalidatesStaleCopyWhenQuarantineFails(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skip("directory mode bits do not make rename fail on Windows")
 	}
 
@@ -111,7 +111,7 @@ func TestCopySessionDataInvalidatesStaleCopyWhenQuarantineFails(t *testing.T) {
 }
 
 func TestCopySessionDataMarksUnrecoverableStaleCopyUnsafe(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skip("directory mode bits do not make rename fail on Windows")
 	}
 

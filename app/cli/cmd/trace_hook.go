@@ -20,6 +20,7 @@ import (
 	"github.com/chainloop-dev/chainloop/app/cli/internal/trace/config"
 	"github.com/chainloop-dev/chainloop/app/cli/internal/trace/cursor"
 	"github.com/chainloop-dev/chainloop/app/cli/internal/trace/opencode"
+	"github.com/chainloop-dev/chainloop/app/cli/internal/trace/pi"
 	"github.com/chainloop-dev/chainloop/app/cli/pkg/action"
 	"github.com/chainloop-dev/chainloop/pkg/attestation/crafter/materials/aicodingsession"
 	"github.com/spf13/cobra"
@@ -37,6 +38,7 @@ func newTraceHookCmd() *cobra.Command {
 		newTraceHookClaudeCmd(),
 		newTraceHookCursorCmd(),
 		newTraceHookOpenCodeCmd(),
+		newTraceHookPiCmd(),
 	)
 
 	return cmd
@@ -363,6 +365,47 @@ func newTraceHookOpenCodePostToolUseCmd() *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			InitHookLogger()
 			return action.HandleAgentPostToolUse(opencode.New(), logger)
+		},
+	}
+}
+
+func newTraceHookPiCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pi",
+		Short: "Handle Pi hook invocations",
+	}
+
+	cmd.AddCommand(
+		newTraceHookPiActionCmd("session-start", "Capture Pi session start", func() error {
+			return action.HandleAgentSessionStart(pi.New(), logger)
+		}),
+		newTraceHookPiActionCmd("user-prompt-submit", "Add Pi's per-turn trace reminder", func() error {
+			return action.HandleAgentPromptSubmit(pi.New(), logger)
+		}),
+		newTraceHookPiActionCmd("session-end", "Capture Pi session end", func() error {
+			return action.HandleAgentSessionEnd(pi.New(), logger)
+		}),
+		newTraceHookPiActionCmd("pre-tool-use", "Snapshot before a Pi tool call", func() error {
+			return action.HandleAgentPreToolUse(pi.New(), logger)
+		}),
+		newTraceHookPiActionCmd("post-tool-use", "Record changes from a Pi tool call", func() error {
+			return action.HandleAgentPostToolUse(pi.New(), logger)
+		}),
+	)
+
+	return cmd
+}
+
+func newTraceHookPiActionCmd(use, short string, run func() error) *cobra.Command {
+	return &cobra.Command{
+		Use:   use,
+		Short: short,
+		Annotations: map[string]string{
+			"skipActionOptsInit": "true",
+		},
+		RunE: func(_ *cobra.Command, _ []string) error {
+			InitHookLogger()
+			return run()
 		},
 	}
 }
